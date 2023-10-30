@@ -1,14 +1,14 @@
 [features]
 seeds = false
 skip-lint = false
-[programs.localnet]
-pixel_game = "3UukPvWro2LyhZWX7rLEkKD6U8jTH1AUeq6w18FKUe8W"
+[programs.devnet]
+pixel_game = "GK1fv7iaZFijE9YreSqoLy35CVUuBGLeKrmrniBfVT1C"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "Devnet"
 wallet = "/Users/raidr/.config/solana/id.json"
 
 [scripts]

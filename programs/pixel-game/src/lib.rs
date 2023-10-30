@@ -1,43 +1,65 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{token::{TokenAccount, Mint, Transfer, Token, transfer, close_account, CloseAccount}, associated_token::AssociatedToken};
+// use anchor_spl::{token::{TokenAccount, Mint, Transfer, Token, transfer, close_account, CloseAccount}, associated_token::AssociatedToken};
 
 
-declare_id!("3UukPvWro2LyhZWX7rLEkKD6U8jTH1AUeq6w18FKUe8W");
+declare_id!("GK1fv7iaZFijE9YreSqoLy35CVUuBGLeKrmrniBfVT1C");
 
 #[program]
 pub mod pixel_game {
+
     use super::*;
 
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
         let player_stats = &mut ctx.accounts.player_stats;
         player_stats.player = ctx.accounts.signer.key();
         player_stats.health = 100;
-        player_stats.energy = 100;
+        player_stats.energy = 10;
         player_stats.attack = 25;
         Ok(())
     }
 
-    pub fn attack(ctx: Context<AttackOpponent>) -> Result<()> {
-        let updated_attacker_stats = &mut ctx.accounts.updated_attacker_stats;
-        updated_attacker_stats.player = ctx.accounts.attacker.key();
+    pub fn attack(ctx: Context<AttackOpponent>, defender: Pubkey) -> Result<()> {
 
-        // have to create the logic for attacking so that i can create the variables value below.
-        // new_attacker_stats.health = attacker_taken_dmg;
-        let energy = &mut updated_attacker_stats.energy;
-
-        *energy -= 1;
-
+        let attackerstat = &mut ctx.accounts.attackerstat;
+    
+        if !attackerstat.is_owner(&ctx.accounts.attacker.to_account_info()) {
+            return Err(GameError::Unauthorized.into());
+        }
+    
+        if defender != ctx.accounts.defender.player {
+            return Err(GameError::DefenderError.into());
+        }
+    
+        let defenderstat = &mut ctx.accounts.defender;
+    
+        loop {
+            defenderstat.take_damage(attackerstat.attack);
+    
+            if defenderstat.health <= 0 {
+                msg!("Attacker wins!");
+                break;
+            }
+    
+            attackerstat.take_damage(defenderstat.attack);
+    
+            if attackerstat.health <= 0 {
+                msg!("Defender wins!");
+                break;
+            }
+        }
         Ok(())
+        // in the future implement fun situations such as "Defender/Attacker dodged attack!", or "Critical hit!", "Flash Knockout!"
     }
 }
+
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {
     #[account(
         init_if_needed,
         payer = signer,
-        space = 500,
-        seeds = [b"stats", signer.key().as_ref()],
+        space = 8 + 32 + 64 + 64 + 64,
+        seeds = [b"player_stats", signer.key().as_ref()],
         bump
     )]
     pub player_stats: Account<'info,PlayerStats>,
@@ -49,29 +71,14 @@ pub struct Initialize<'info> {
 #[derive(Accounts)]
 pub struct AttackOpponent<'info> {
     #[account(
-        seeds = [b"stats", attacker.key().as_ref()],
+        seeds = [b"attackerstat", attacker.key().as_ref()],
         bump
     )]
-    pub updated_attacker_stats: Account<'info,PlayerStats>,
+    pub attackerstat: Account<'info,PlayerStats>,
     #[account(mut)]
     pub attacker: Signer<'info>,
     pub system_program: Program<'info, System>,
-    #[account(mut)]
-    pub opponent: SystemAccount<'info>,
-    pub opponent_token: Account<'info, Mint>,
-    #[account(
-        mut,
-        associated_token::mint = opponent_token,
-        associated_token::authority = opponent
-    )]
-    pub maker_ata: Account<'info, TokenAccount>,
-    #[account(
-        seeds = [b"opstats", opponent.key().as_ref()],
-        bump
-    )]
-    pub opponent_stats: Account<'info,PlayerStats>,
-    pub token_program: Program<'info, Token>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub defender: Account<'info,PlayerStats>,
 
 }
 
@@ -81,4 +88,22 @@ pub struct PlayerStats {
     pub energy: i64,
     pub health: i64,
     pub attack: i64,
+}
+
+impl PlayerStats {
+    pub fn is_owner(&self, account: &AccountInfo) -> bool {
+        self.player == *account.key
+    }
+
+    pub fn take_damage(&mut self, amount: i64) {
+        self.health = self.health.saturating_sub(amount);
+    }
+}
+
+#[error_code]
+pub enum GameError {
+    #[msg("The "player" PubKey on the PlayerStats struct does not match the one signing the txn")]
+    Unauthorized,
+    #[msg("The "defender" PubKey value in the instruction parameter does not match defenders PlayerStats "player" value.")]
+    DefenderError
 }
