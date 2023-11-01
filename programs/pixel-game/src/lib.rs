@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
 // use anchor_spl::{token::{TokenAccount, Mint, Transfer, Token, transfer, close_account, CloseAccount}, associated_token::AssociatedToken};
 
-
 declare_id!("GK1fv7iaZFijE9YreSqoLy35CVUuBGLeKrmrniBfVT1C");
 
 #[program]
@@ -20,8 +19,7 @@ pub mod pixel_game {
 
     pub fn attack(ctx: Context<AttackOpponent>, defender: Pubkey) -> Result<()> {
 
-        let attackerstat = &mut ctx.accounts.attackerstat;
-    
+        let attackerstat = &mut ctx.accounts.player_stats;
         if !attackerstat.is_owner(&ctx.accounts.attacker.to_account_info()) {
             return Err(GameError::Unauthorized.into());
         }
@@ -34,22 +32,30 @@ pub mod pixel_game {
     
         loop {
             defenderstat.take_damage(attackerstat.attack);
-    
-            if defenderstat.health <= 0 {
+            msg!("Defender took {} damage, remaining health: {}", attackerstat.attack, defenderstat.health);
+
+            if defenderstat.health < 0 {
                 msg!("Attacker wins!");
+                defenderstat.health = 0;
+                attackerstat.health = attackerstat.health;
                 break;
             }
     
             attackerstat.take_damage(defenderstat.attack);
-    
-            if attackerstat.health <= 0 {
+            msg!("Attacker took {} damage, remaining health: {}", defenderstat.attack, attackerstat.health);
+            
+            if attackerstat.health < 0 {
                 msg!("Defender wins!");
+                attackerstat.health = 0;
+                defenderstat.health = defenderstat.health;
                 break;
             }
         }
+        
         Ok(())
         // in the future implement fun situations such as "Defender/Attacker dodged attack!", or "Critical hit!", "Flash Knockout!"
     }
+
 }
 
 
@@ -69,17 +75,18 @@ pub struct Initialize<'info> {
 }
 
 #[derive(Accounts)]
+// #[instruction(attacker_health: u64, defender_health: u64)]
 pub struct AttackOpponent<'info> {
     #[account(
-        seeds = [b"attackerstat", attacker.key().as_ref()],
+        mut, 
+        seeds = [b"player_stats", attacker.key().as_ref()],
         bump
     )]
-    pub attackerstat: Account<'info,PlayerStats>,
+    pub player_stats: Account<'info,PlayerStats>,
     #[account(mut)]
     pub attacker: Signer<'info>,
     pub system_program: Program<'info, System>,
     pub defender: Account<'info,PlayerStats>,
-
 }
 
 #[account]

@@ -14,6 +14,7 @@ import { BN } from "bn.js";
 // import { devWallet, } from "./dev-wallet";
 import { secretKey, importedPlayer2Keypair } from "./keypair";
 import * as bs58 from 'bs58';
+import { devWallet } from "./dev-wallet";
 
 describe("pixel-game", () => {
 
@@ -35,7 +36,9 @@ const player2Keypair = Keypair.fromSecretKey(player2KeypairArray);
 const devPubkey = devKeypair.publicKey.toString();
 
 // Transfer tokens to generated wallet
+
 // *Only had to do this once when first time initializing P2*
+
 // it("Transfer tokens to new walet!", async () => {
 //   const web3 = require("@solana/web3.js");
 //   const { Connection, SystemProgram, Transaction, clusterApiUrl, LAMPORTS_PER_SOL } = web3;
@@ -86,10 +89,10 @@ const devPubkey = devKeypair.publicKey.toString();
     // Add your test here.
 
     const tx = await program.methods.initialize().accounts({
-      playerStats: player2State,
-      signer: player2Keypair.publicKey,
+      playerStats: player1State,
+      signer: devKeypair.publicKey,
       systemProgram: SystemProgram.programId
-    }).signers([player2Keypair])
+    }).signers([devKeypair])
     .rpc()
     .then(confirmTx);
 
@@ -100,28 +103,52 @@ const devPubkey = devKeypair.publicKey.toString();
     console.log("Player2 Pubkey: ",player2Keypair.publicKey);
 
     // Fetch the data account and log results
-  const data = await program.account.playerStats.fetch(player2State)
-  console.log(`Reviewer: `,data.health.toString());
+  const player1Data = await program.account.playerStats.fetch(player1State)
+  const player2Data = await program.account.playerStats.fetch(player2State)
+
+  console.log(`Player1 Before Battle Health: `,player1Data.health.toString());
+  console.log(`Player2 Before Battle Health: `,player2Data.health.toString());
   });
 
-  it("Check Health!", async () => {
-    // Add your test here.
-    console.log('Test has started');
-  logPlayerHealth(player1State.toBase58());
-  });
+  // it("Check Health Before Battle!", async () => {
+  //   // Add your test here.
+  //   console.log('Test has started');
+  // logPlayerHealth(player1State.toBase58());
+  // });
+  
 
-  async function logPlayerHealth(playerKey: string) {
+//   async function logPlayerHealth(playerKey: string) {
 
-    try {
-      const playerStatsAccount = await program.account.playerStats.fetch(new PublicKey(playerKey));
-      console.log(devKeypair.publicKey);
-      console.log(`Player's Health: ${playerStatsAccount.health}`);
-      console.log(`Player's Energy: ${playerStatsAccount.energy}`);
+//     try {
+//       const playerStatsAccount = await program.account.playerStats.fetch(new PublicKey(playerKey));
+//       console.log(devKeypair.publicKey);
+//       console.log(`Player's Health: ${playerStatsAccount.health}`);
+//       console.log(`Player's Energy: ${playerStatsAccount.energy}`);
 
-  } catch (error) {
-      console.error('Failed to log player health:', error);
-  }
-}
+//   } catch (error) {
+//       console.error('Failed to log player health:', error);
+//   }
+// }
+
+it("Attack!!!", async () => {
+  // Call the attack function
+  const tx = await program.methods.attack(player2Keypair.publicKey).accounts({
+    defender: player2State,
+    attacker: devKeypair.publicKey,
+    playerStats: player1State,
+    systemProgram: SystemProgram.programId
+  }).signers([devKeypair])
+  .rpc()
+  .then(confirmTx);
+
+  // Fetch the updated data for both attacker and defender
+  const attackerData = await program.account.playerStats.fetch(player1State)
+  const defenderData = await program.account.playerStats.fetch(player2State)
+
+  // Log the updated health values
+  console.log(`Attacker's health after battle: `, attackerData.health.toString());
+  console.log(`Defender's health after battle: `, defenderData.health.toString());
+});
 
 const confirmTx = async (signature: string) => {
   const latestBlockhash = await anchor
