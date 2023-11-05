@@ -3,6 +3,7 @@ seeds = false
 skip-lint = false
 [programs.devnet]
 pixel_game = "GK1fv7iaZFijE9YreSqoLy35CVUuBGLeKrmrniBfVT1C"
+staking = "AkYu7jc18ErVQi7SJ8yPL9VMSusSXXXPY8nmfTWqtKSR"
 
 [registry]
 url = "https://api.apr.dev"
