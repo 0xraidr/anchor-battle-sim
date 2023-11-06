@@ -2,8 +2,8 @@
 seeds = false
 skip-lint = false
 [programs.devnet]
-pixel_game = "GK1fv7iaZFijE9YreSqoLy35CVUuBGLeKrmrniBfVT1C"
-staking = "AkYu7jc18ErVQi7SJ8yPL9VMSusSXXXPY8nmfTWqtKSR"
+pixel_game = "FEkTfdHNSnhGpqSUePtm5FesUUJzhbJ7jhFCUWhEMPCc"
+nft_stake_vault = "4g1CcTvcuwpLZZucwYXeAHVtu8HmQkaT4tkkPVU1bemK"
 
 [registry]
 url = "https://api.apr.dev"

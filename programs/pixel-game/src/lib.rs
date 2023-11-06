@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 // use anchor_spl::{token::{TokenAccount, Mint, Transfer, Token, transfer, close_account, CloseAccount}, associated_token::AssociatedToken};
 
-declare_id!("GK1fv7iaZFijE9YreSqoLy35CVUuBGLeKrmrniBfVT1C");
+declare_id!("FEkTfdHNSnhGpqSUePtm5FesUUJzhbJ7jhFCUWhEMPCc");
 
 #[program]
 pub mod pixel_game {
