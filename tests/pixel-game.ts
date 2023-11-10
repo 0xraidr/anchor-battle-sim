@@ -3,145 +3,114 @@ import { Program } from "@coral-xyz/anchor";
 import { PixelGame } from "../target/types/pixel_game";
 import {
   PublicKey,
-  Connection,
-  Commitment,
   Keypair,
   SystemProgram,
-  Transaction,
-  LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
 import { BN } from "bn.js";
-// import { devWallet, } from "./dev-wallet";
-import { secretKey, importedPlayer2Keypair } from "./keypair";
+import { secretKey, player2SecretKey } from "./keypair";
 import * as bs58 from 'bs58';
-import { devWallet } from "./dev-wallet";
 
 describe("pixel-game", () => {
 
-const programId = new PublicKey('GK1fv7iaZFijE9YreSqoLy35CVUuBGLeKrmrniBfVT1C'); // Your program ID
+const programId = new PublicKey('9swm7FNBS5GxMG6es1yoEYQhNmRjhbNozDp2u1ogybgd'); // Your program ID
 
-const player1KeypairArray = new Uint8Array(secretKey);
-const player2KeypairArray = new Uint8Array(importedPlayer2Keypair)
+const player1 = new Uint8Array(secretKey);
+const player1Keypair = Keypair.fromSecretKey(player1);
+const player1Pubkey = new PublicKey("DGnYpUq8cA5iHhLcban6RexM8h4bZmcgQ1qTzFTth58y")
+
+const player2 = new Uint8Array(player2SecretKey);
+const player2Keypair = Keypair.fromSecretKey(player2)
+const player2Pubkey = new PublicKey("C4euDc2nahAbh7HAuX8Bm5ie5Mx57ETird3bCqsvXZFo")
 
 // Configure the client to use the cluster.
 anchor.setProvider(anchor.AnchorProvider.env());
-
 const program = anchor.workspace.PixelGame as Program<PixelGame>;
 
-// Create Keypairs from the secret key
-const devKeypair = Keypair.fromSecretKey(player1KeypairArray);
-const player2Keypair = Keypair.fromSecretKey(player2KeypairArray);
-
-// Extract the public key as a string
-const devPubkey = devKeypair.publicKey.toString();
-
-// Transfer tokens to generated wallet
-
-// *Only had to do this once when first time initializing P2*
-
-// it("Transfer tokens to new walet!", async () => {
-//   const web3 = require("@solana/web3.js");
-//   const { Connection, SystemProgram, Transaction, clusterApiUrl, LAMPORTS_PER_SOL } = web3;
-
-//   let connection = new Connection(clusterApiUrl("devnet"), "confirmed");
-
-//   // Create the transfer instruction
-//   const transferInstruction = SystemProgram.transfer({
-//       fromPubkey: devKeypair.publicKey,
-//       toPubkey: player2Keypair.publicKey,
-//       lamports: LAMPORTS_PER_SOL,  // 1 SOL
-//   });
-
-//   // Get the recent blockhash
-//   const { blockhash } = await connection.getRecentBlockhash();
-
-//   // Create and populate the transaction
-//   let transaction = new Transaction({ recentBlockhash: blockhash }).add(transferInstruction);
-
-//   // Sign the transaction
-//   transaction.sign(devKeypair);
-
-//   // Send the transaction
-//   const txid = await connection.sendRawTransaction(transaction.serialize());
-//   console.log("Transaction ID:", txid);
-
-//   // Wait for the transaction to be confirmed
-//   await connection.confirmTransaction(txid);
-//   console.log("Transaction confirmed!");
-//   console.log("updated player2 pubkey: ", player2Keypair.publicKey.toBase58())
-//   console.log("updated player2 keypair: ", player2Keypair)
-// });
-
-  // Finds the PLAYER1/DEVWALLET seed we generated on the rust side so we can use it here.
+// Finds the PLAYER1/DEVWALLET seed we generated on the rust side so we can use it here.
   const player1State = PublicKey.findProgramAddressSync(
-    [Buffer.from("player_stats"), devKeypair.publicKey.toBytes()],
+    [Buffer.from("player_stats"), player1Pubkey.toBytes()],
     program.programId
   )[0];
 
-    // Finds the PLAYER2 seed we generated on the rust side so we can use it here.
+// Finds the PLAYER2 seed we generated on the rust side so we can use it here.
     const player2State = PublicKey.findProgramAddressSync(
-      [Buffer.from("player_stats"), player2Keypair.publicKey.toBytes()],
+      [Buffer.from("player_stats"), player2Pubkey.toBytes()],
       program.programId
     )[0];
 
+// IF YOU NEED TO AIRDROP TOKENS
+it("Airdrop tokens to new walet!", async () => {
+  await anchor
+    .getProvider()
+    .connection.requestAirdrop(
+      player2Pubkey,
+      2 * anchor.web3.LAMPORTS_PER_SOL
+    )
+    .then(confirmTx);
+  console.log("player2 pub:", player2Pubkey);
+  console.log("player2 secret:", player2Keypair);
+});
 
-  it("Initialize Player1!", async () => {
-    // Add your test here.
-
-    const tx = await program.methods.initialize().accounts({
+it("INITIALIZNG PLAYER1!", async () => {
+  // Add your test here.
+  await program.methods
+    .initialize()
+    .accounts({
       playerStats: player1State,
-      signer: devKeypair.publicKey,
-      systemProgram: SystemProgram.programId
-    }).signers([devKeypair])
+      signer: player1Pubkey,
+      systemProgram: SystemProgram.programId,
+    })
+    .signers([player1Keypair])
     .rpc()
     .then(confirmTx);
 
-    console.log("Your transaction signature", tx);
-    console.log("Player1 Pubkey: ", devKeypair.publicKey);
-    // console.log("Player2 Pubkey: ",player2Key.publicKey);
-    console.log("DevStat Pubkey: ",player1State);
-    console.log("Player2 Pubkey: ",player2Keypair.publicKey);
+ // Fetch the data account and log results
+  const player1Data = await program.account.playerStats.fetch(player1State);
+  // const player2Data = await program.account.playerStats.fetch(player2State)
 
-    // Fetch the data account and log results
-  const player1Data = await program.account.playerStats.fetch(player1State)
-  const player2Data = await program.account.playerStats.fetch(player2State)
+  console.log(`Player1 Before Battle Health:` ,player1Data.health.toString());
+  console.log("Player1 Attack Stat:" ,player1Data.attack.toString());
+  console.log("Player1 Level:" ,player1Data.level.toString());
+  console.log("Player1 Energy:" ,player1Data.energy.toString());
+});
 
-  console.log(`Player1 Before Battle Health: `,player1Data.health.toString());
-  console.log(`Player2 Before Battle Health: `,player2Data.health.toString());
-  });
+it("INITIALIZNG PLAYER2!", async () => {
+  // Add your test here.
+  await program.methods
+    .initialize()
+    .accounts({
+      playerStats: player2State,
+      signer: player2Pubkey,
+      systemProgram: SystemProgram.programId,
+    })
+    .signers([player2Keypair])
+    .rpc()
+    .then(confirmTx);
 
-  // it("Check Health Before Battle!", async () => {
-  //   // Add your test here.
-  //   console.log('Test has started');
-  // logPlayerHealth(player1State.toBase58());
-  // });
-  
+ // Fetch the data account and log results
+  const player2Data = await program.account.playerStats.fetch(player2State);
 
-//   async function logPlayerHealth(playerKey: string) {
+  console.log(`Player2 Before Battle Health:` ,player2Data.health.toString());
+  console.log("Player2 Attack Stat:" ,player2Data.attack.toString());
+  console.log("Player2 Level:" ,player2Data.level.toString());
+  console.log("Player2 Energy:" ,player2Data.energy.toString());
+});
 
-//     try {
-//       const playerStatsAccount = await program.account.playerStats.fetch(new PublicKey(playerKey));
-//       console.log(devKeypair.publicKey);
-//       console.log(`Player's Health: ${playerStatsAccount.health}`);
-//       console.log(`Player's Energy: ${playerStatsAccount.energy}`);
+it("Attack Player2!", async () => {
+  // Add your test here.
+  await program.methods
+    .attack(player2Pubkey)
+    .accounts({
+      playerStats: player1State,
+      defender: player2State,
+      attacker: player1Pubkey,
+      systemProgram: SystemProgram.programId,
+    })
+    .signers([player1Keypair])
+    .rpc()
+    .then(confirmTx);
 
-//   } catch (error) {
-//       console.error('Failed to log player health:', error);
-//   }
-// }
-
-it("Attack!!!", async () => {
-  // Call the attack function
-  const tx = await program.methods.attack(player2Keypair.publicKey).accounts({
-    defender: player2State,
-    attacker: devKeypair.publicKey,
-    playerStats: player1State,
-    systemProgram: SystemProgram.programId
-  }).signers([devKeypair])
-  .rpc()
-  .then(confirmTx);
-
-  // Fetch the updated data for both attacker and defender
+      // Fetch the updated data for both attacker and defender
   const attackerData = await program.account.playerStats.fetch(player1State)
   const defenderData = await program.account.playerStats.fetch(player2State)
 
@@ -149,6 +118,8 @@ it("Attack!!!", async () => {
   console.log(`Attacker's health after battle: `, attackerData.health.toString());
   console.log(`Defender's health after battle: `, defenderData.health.toString());
 });
+
+
 
 const confirmTx = async (signature: string) => {
   const latestBlockhash = await anchor
@@ -161,7 +132,7 @@ const confirmTx = async (signature: string) => {
     },
     "confirmed"
   );
-  console.log(signature);
+  console.log("Tx Signature:", signature);
   return signature;
 };
 })
