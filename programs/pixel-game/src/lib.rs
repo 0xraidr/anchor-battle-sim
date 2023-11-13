@@ -3,10 +3,7 @@ use anchor_lang::prelude::*;
 
 mod instructions;
 mod state;
-
 use instructions::*;
-
-
 
 declare_id!("9swm7FNBS5GxMG6es1yoEYQhNmRjhbNozDp2u1ogybgd");
 
@@ -29,5 +26,9 @@ pub enum GameError {
     #[msg("The "player" PubKey on the PlayerStats struct does not match the one signing the txn")]
     Unauthorized,
     #[msg("The "defender" PubKey value in the instruction parameter does not match defenders PlayerStats "player" value.")]
-    DefenderError
+    DefenderError,
+    #[msg("The "attacker" has 0 energy left.")]
+    InsufficientEnergy,
+    #[msg("The "attacker" has 0 energy left.")]
+    HealTime,
 }

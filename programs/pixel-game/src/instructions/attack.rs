@@ -2,10 +2,15 @@ use anchor_lang::prelude::*;
 use crate::{state::PlayerStats, GameError};
 
 pub fn attack_handler(ctx: Context<AttackOpponent>, defender: Pubkey) -> Result<()> {
-    let player_stats = &mut ctx.accounts.player_stats;
-    player_stats.energy -= 1;
+    let player_stats = &mut ctx.accounts.players_stats;
 
-    let attackerstat = &mut ctx.accounts.player_stats;
+    if player_stats.energy > 0 {
+        player_stats.energy -= 1;
+    } else {
+        return Err(GameError::InsufficientEnergy.into());
+    }
+
+    let attackerstat = &mut ctx.accounts.players_stats;
     if !attackerstat.is_owner(&ctx.accounts.attacker.to_account_info()) {
         return Err(GameError::Unauthorized.into());
     }
@@ -46,10 +51,10 @@ pub fn attack_handler(ctx: Context<AttackOpponent>, defender: Pubkey) -> Result<
 pub struct AttackOpponent<'info> {
     #[account(
         mut, 
-        seeds = [b"player_stats", attacker.key().as_ref()],
+        seeds = [b"players_stats", attacker.key().as_ref()],
         bump
     )]
-    pub player_stats: Account<'info,PlayerStats>,
+    pub players_stats: Account<'info,PlayerStats>,
     #[account(mut)]
     pub attacker: Signer<'info>,
     pub system_program: Program<'info, System>,

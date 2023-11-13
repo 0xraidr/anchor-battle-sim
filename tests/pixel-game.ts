@@ -28,13 +28,13 @@ const program = anchor.workspace.PixelGame as Program<PixelGame>;
 
 // Finds the PLAYER1/DEVWALLET seed we generated on the rust side so we can use it here.
   const player1State = PublicKey.findProgramAddressSync(
-    [Buffer.from("player_stats"), player1Pubkey.toBytes()],
+    [Buffer.from("players_stats"), player1Pubkey.toBytes()],
     program.programId
   )[0];
 
 // Finds the PLAYER2 seed we generated on the rust side so we can use it here.
     const player2State = PublicKey.findProgramAddressSync(
-      [Buffer.from("player_stats"), player2Pubkey.toBytes()],
+      [Buffer.from("players_stats"), player2Pubkey.toBytes()],
       program.programId
     )[0];
 
@@ -56,7 +56,7 @@ it("INITIALIZNG PLAYER1!", async () => {
   await program.methods
     .initialize()
     .accounts({
-      playerStats: player1State,
+      playersStats: player1State,
       signer: player1Pubkey,
       systemProgram: SystemProgram.programId,
     })
@@ -79,7 +79,7 @@ it("INITIALIZNG PLAYER2!", async () => {
   await program.methods
     .initialize()
     .accounts({
-      playerStats: player2State,
+      playersStats: player2State,
       signer: player2Pubkey,
       systemProgram: SystemProgram.programId,
     })
@@ -117,6 +117,9 @@ it("Attack Player2!", async () => {
   // Log the updated health values
   console.log(`Attacker's health after battle: `, attackerData.health.toString());
   console.log(`Defender's health after battle: `, defenderData.health.toString());
+  console.log(`Attacker's energy after battle: `, attackerData.energy.toString());
+  console.log(`Defender's energy after battle: `, defenderData.energy.toString());
+
 });
 
 
