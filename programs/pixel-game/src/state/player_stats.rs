@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 // use crate::GameError;
 
 
+
 #[account]
 pub struct PlayerStats {
     pub player: Pubkey,
@@ -43,10 +44,4 @@ impl PlayerStats {
         // Calculate the XP for the next level with an increasing difficulty
         ((base_xp_required as f64) * growth_factor.powi(self.level as i32)).round() as i64
     }
-
-    //     // This is for the health instruction
-    // pub fn heal(&mut self) -> Result<()> {
-
-    //     Ok(())
-    // }
 }

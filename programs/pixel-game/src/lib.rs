@@ -19,6 +19,10 @@ pub mod pixel_game {
     pub fn attack(ctx: Context<AttackOpponent>, defender: Pubkey) -> Result<()> {
         attack_handler(ctx, defender)
     }
+
+    pub fn heal(ctx: Context<Heal>, amount: u64) -> Result<()> {
+        heal_handler(ctx, amount)
+    }
 }
 
 #[error_code]
@@ -29,6 +33,8 @@ pub enum GameError {
     DefenderError,
     #[msg("The "attacker" has 0 energy left.")]
     InsufficientEnergy,
-    #[msg("The "attacker" has 0 energy left.")]
+    #[msg("X AMT of time hasnt passed yet to regen health")]
     HealTime,
+    #[msg("You already have max health!")]
+    MaxHealth,
 }

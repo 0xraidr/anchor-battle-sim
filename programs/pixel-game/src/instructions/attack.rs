@@ -24,9 +24,17 @@ pub fn attack_handler(ctx: Context<AttackOpponent>, defender: Pubkey) -> Result<
     loop {
         defenderstat.take_damage(attackerstat.attack);
         msg!("Defender took {} damage, remaining health: {}", attackerstat.attack, defenderstat.health);
+        let clock = Clock::get()?;
+        let latest_timestamp = clock.unix_timestamp;
 
         if defenderstat.health <= 0 {
             msg!("Attacker wins!");
+
+            // Set latest healthchange timestamp here so after the battle each players clock can start to count till
+            // health regenerates
+            defenderstat.last_heal_timestamp = latest_timestamp;
+            attackerstat.last_heal_timestamp = latest_timestamp;
+
             defenderstat.health = 0;
             attackerstat.health = attackerstat.health;
             break;
@@ -37,6 +45,10 @@ pub fn attack_handler(ctx: Context<AttackOpponent>, defender: Pubkey) -> Result<
         
         if attackerstat.health <= 0 {
             msg!("Defender wins!");
+
+            attackerstat.last_heal_timestamp = latest_timestamp;
+            defenderstat.last_heal_timestamp = latest_timestamp;
+
             attackerstat.health = 0;
             defenderstat.health = defenderstat.health;
             break;
@@ -60,7 +72,7 @@ pub struct AttackOpponent<'info> {
     pub system_program: Program<'info, System>,
     #[account(
         mut, 
-        seeds = [b"player_stats", defender.player.key().as_ref()],
+        seeds = [b"players_stats", defender.player.key().as_ref()],
         bump
     )]
     pub defender: Account<'info,PlayerStats>,
