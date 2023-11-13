@@ -33,7 +33,8 @@ pub struct Heal<'info> {
     #[account(
         mut,
         seeds = [b"players_stats", signer.key().as_ref()],
-        bump
+        bump,
+        constraint = players_stats.player == *signer.key, // Ensures the account is owned by the signer
     )]
     pub players_stats: Account<'info,PlayerStats>,
     #[account(mut)]
