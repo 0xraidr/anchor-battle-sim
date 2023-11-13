@@ -101,7 +101,7 @@ it("Attack Player2!", async () => {
   await program.methods
     .attack(player2Pubkey)
     .accounts({
-      playerStats: player1State,
+      playersStats: player1State,
       defender: player2State,
       attacker: player1Pubkey,
       systemProgram: SystemProgram.programId,
