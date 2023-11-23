@@ -34,13 +34,13 @@ const program = anchor.workspace.PixelGame as Program<PixelGame>;
 
 // Finds the PLAYER1/DEVWALLET seed we generated on the rust side so we can use it here.
   const player1State = PublicKey.findProgramAddressSync(
-    [Buffer.from("players_stats"), player1Pubkey.toBytes()],
+    [Buffer.from("players_stats!"), player1Pubkey.toBytes()],
     program.programId
   )[0];
 
 // Finds the PLAYER2 seed we generated on the rust side so we can use it here.
     const player2State = PublicKey.findProgramAddressSync(
-      [Buffer.from("players_stats"), player2Pubkey.toBytes()],
+      [Buffer.from("players_stats!"), player2Pubkey.toBytes()],
       program.programId
     )[0];
 
@@ -57,51 +57,51 @@ const program = anchor.workspace.PixelGame as Program<PixelGame>;
 //   console.log("player2 secret:", player2Keypair);
 // });
 
-// it("INITIALIZNG PLAYER1!", async () => {
-//   // Add your test here.
-//   await program.methods
-//     .initialize()
-//     .accounts({
-//       playersStats: player1State,
-//       signer: player1Pubkey,
-//       systemProgram: SystemProgram.programId,
-//     })
-//     .signers([player1Keypair])
-//     .rpc()
-//     .then(confirmTx);
+it("INITIALIZNG PLAYER1!", async () => {
+  // Add your test here.
+  await program.methods
+    .initialize()
+    .accounts({
+      playersStats: player1State,
+      signer: player1Pubkey,
+      systemProgram: SystemProgram.programId,
+    })
+    .signers([player1Keypair])
+    .rpc()
+    .then(confirmTx);
 
-//  // Fetch the data account and log results
-//   const player1Data = await program.account.playerStats.fetch(player1State);
-//   // const player2Data = await program.account.playerStats.fetch(player2State)
+ // Fetch the data account and log results
+  const player1Data = await program.account.playerStats.fetch(player1State);
+  // const player2Data = await program.account.playerStats.fetch(player2State)
 
-//   console.log(`Player1 Before Battle Health:` ,player1Data.health.toString());
-//   console.log("Player1 Attack Stat:" ,player1Data.attack.toString());
-//   console.log("Player1 Level:" ,player1Data.level.toString());
-//   console.log("Player1 Energy:" ,player1Data.energy.toString());
-//   console.log("Player1 Energy:" ,player1Data.energy.toString());
-// });
+  console.log(`Player1 Before Battle Health:` ,player1Data.health.toString());
+  console.log("Player1 Attack Stat:" ,player1Data.attack.toString());
+  console.log("Player1 Level:" ,player1Data.level.toString());
+  console.log("Player1 Energy:" ,player1Data.energy.toString());
+  console.log("Player1 Energy:" ,player1Data.energy.toString());
+});
 
-// it("INITIALIZNG PLAYER2!", async () => {
-//   // Add your test here.
-//   await program.methods
-//     .initialize()
-//     .accounts({
-//       playersStats: player2State,
-//       signer: player2Pubkey,
-//       systemProgram: SystemProgram.programId,
-//     })
-//     .signers([player2Keypair])
-//     .rpc()
-//     .then(confirmTx);
+it("INITIALIZNG PLAYER2!", async () => {
+  // Add your test here.
+  await program.methods
+    .initialize()
+    .accounts({
+      playersStats: player2State,
+      signer: player2Pubkey,
+      systemProgram: SystemProgram.programId,
+    })
+    .signers([player2Keypair])
+    .rpc()
+    .then(confirmTx);
 
-//  // Fetch the data account and log results
-//   const player2Data = await program.account.playerStats.fetch(player2State);
+ // Fetch the data account and log results
+  const player2Data = await program.account.playerStats.fetch(player2State);
 
-//   console.log(`Player2 Before Battle Health:` ,player2Data.health.toString());
-//   console.log("Player2 Attack Stat:" ,player2Data.attack.toString());
-//   console.log("Player2 Level:" ,player2Data.level.toString());
-//   console.log("Player2 Energy:" ,player2Data.energy.toString());
-// });
+  console.log(`Player2 Before Battle Health:` ,player2Data.health.toString());
+  console.log("Player2 Attack Stat:" ,player2Data.attack.toString());
+  console.log("Player2 Level:" ,player2Data.level.toString());
+  console.log("Player2 Energy:" ,player2Data.energy.toString());
+});
 
 it("Attack Player2!", async () => {
   // Add your test here.
@@ -169,6 +169,19 @@ it("HEALING PLAYER2!", async () => {
   // const player2Data = await program.account.playerStats.fetch(player2State)
 
   console.log(`Player2 Updated Health:` ,player2Data.health.toString());
+
+});
+
+it("CHECK XP!", async () => {
+
+ // Fetch the data account and log results
+  const player1Xp = await program.account.playerStats.fetch(player1State);
+  const player2Xp = await program.account.playerStats.fetch(player2State)
+
+  console.log(`Player1 Gained EXP:` ,player1Xp.xpPoints.toString());
+  console.log(`Player1 Total EXP:` ,player1Xp.xpPoints.toString());
+  console.log(`Player2 Gained EXP:` ,player2Xp.xpPoints.toString());
+
 
 });
 

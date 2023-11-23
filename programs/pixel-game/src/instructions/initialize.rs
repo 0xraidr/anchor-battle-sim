@@ -14,6 +14,7 @@ pub fn initialize_handler(ctx: Context<Initialize>) -> Result<()> {
     player_stats.energy = 3;
     player_stats.level = 1;
     player_stats.xp_points = 0;
+    // player_stats.earned_xp_points = 0;
     player_stats.xp_to_next_level = 75;
     player_stats.last_heal_timestamp = current_timestamp;
 
@@ -26,7 +27,7 @@ pub struct Initialize<'info> {
         init_if_needed,
         payer = signer,
         space = PlayerStats::LEN,
-        seeds = [b"players_stats", signer.key().as_ref()],
+        seeds = [b"players_stats!", signer.key().as_ref()],
         bump
     )]
     pub players_stats: Account<'info,PlayerStats>,

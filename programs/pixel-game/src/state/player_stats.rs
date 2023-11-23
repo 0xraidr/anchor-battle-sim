@@ -11,12 +11,13 @@ pub struct PlayerStats {
     pub attack: i64,
     pub level: i64,
     pub xp_points: i64,
+    pub earned_xp_points: i64,
     pub xp_to_next_level: i64,
     pub last_heal_timestamp: i64,
 }
 
 impl PlayerStats {
-    pub const LEN: usize = 8 + 32 + 8 * 7;
+    pub const LEN: usize = 8 + 32 + 8 * 8;
 
     pub fn is_owner(&self, account: &AccountInfo) -> bool {
         self.player == *account.key
@@ -43,5 +44,11 @@ impl PlayerStats {
 
         // Calculate the XP for the next level with an increasing difficulty
         ((base_xp_required as f64) * growth_factor.powi(self.level as i32)).round() as i64
+    }
+
+    fn increment_energy(start_timestamp: UnixTimestamp, current_timestamp: UnixTimestamp) -> i32 {
+        let seconds_elapsed = current_timestamp - start_timestamp;
+        let hours_elapsed = seconds_elapsed / 3600; // Convert seconds to hours
+        hours_elapsed as i32
     }
 }

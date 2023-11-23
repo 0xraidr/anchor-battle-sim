@@ -32,7 +32,7 @@ pub fn heal_handler(ctx: Context<Heal>, amount: u64) -> Result<()> {
 pub struct Heal<'info> {
     #[account(
         mut,
-        seeds = [b"players_stats", signer.key().as_ref()],
+        seeds = [b"players_stats!", signer.key().as_ref()],
         bump,
         constraint = players_stats.player == *signer.key, // Ensures the account is owned by the signer
     )]

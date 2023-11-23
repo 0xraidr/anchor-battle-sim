@@ -2,13 +2,13 @@ use anchor_lang::prelude::*;
 use crate::{state::PlayerStats, GameError};
 
 pub fn attack_handler(ctx: Context<AttackOpponent>, defender: Pubkey) -> Result<()> {
-    let player_stats = &mut ctx.accounts.players_stats;
-
-    if player_stats.energy > 0 {
-        player_stats.energy -= 1;
-    } else {
-        return Err(GameError::InsufficientEnergy.into());
-    }
+    // COMMENTING OUT ENERGY DEPLETION FOR TESTING PURPOSES
+    // let player_stats = &mut ctx.accounts.players_stats;
+    // if player_stats.energy > 0 {
+    //     player_stats.energy -= 1;
+    // } else {
+    //     return Err(GameError::InsufficientEnergy.into());
+    // }
 
     let attackerstat = &mut ctx.accounts.players_stats;
     if !attackerstat.is_owner(&ctx.accounts.attacker.to_account_info()) {
@@ -30,6 +30,15 @@ pub fn attack_handler(ctx: Context<AttackOpponent>, defender: Pubkey) -> Result<
         if defenderstat.health <= 0 {
             msg!("Attacker wins!");
 
+///////////////////////////////////////
+            // TESTING XP GAIN FUNCTION
+    // Calculate XP gain for the attacker
+    let xp_gain = attackerstat.calculate_xp_gain(defenderstat.level);
+    attackerstat.xp_points += xp_gain;
+    msg!("Attacker gains {} XP", xp_gain);
+            // TESTING XP GAIN FUNCTION
+///////////////////////////////////////
+           
             // Set latest healthchange timestamp here so after the battle each players clock can start to count till
             // health regenerates
             defenderstat.last_heal_timestamp = latest_timestamp;
@@ -45,6 +54,15 @@ pub fn attack_handler(ctx: Context<AttackOpponent>, defender: Pubkey) -> Result<
         
         if attackerstat.health <= 0 {
             msg!("Defender wins!");
+
+///////////////////////////////////////
+            // TESTING XP GAIN FUNCTION
+    // Calculate XP gain for the attacker
+    let xp_gain = attackerstat.calculate_xp_gain(defenderstat.level);
+    attackerstat.xp_points += xp_gain;
+    msg!("Attacker gains {} XP", xp_gain);
+            // TESTING XP GAIN FUNCTION
+///////////////////////////////////////
 
             attackerstat.last_heal_timestamp = latest_timestamp;
             defenderstat.last_heal_timestamp = latest_timestamp;
@@ -63,7 +81,7 @@ pub fn attack_handler(ctx: Context<AttackOpponent>, defender: Pubkey) -> Result<
 pub struct AttackOpponent<'info> {
     #[account(
         mut, 
-        seeds = [b"players_stats", attacker.key().as_ref()],
+        seeds = [b"players_stats!", attacker.key().as_ref()],
         bump,
         constraint = players_stats.player == *attacker.key, // Ensures the account is owned by the signer
     )]
@@ -73,7 +91,7 @@ pub struct AttackOpponent<'info> {
     pub system_program: Program<'info, System>,
     #[account(
         mut, 
-        seeds = [b"players_stats", defender.player.key().as_ref()],
+        seeds = [b"players_stats!", defender.player.key().as_ref()],
         bump
     )]
     pub defender: Account<'info,PlayerStats>,
